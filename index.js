@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -26,6 +26,22 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+
+    // const productCollection = client.db('emaJohnDB').collection('foods');
+
+    const plateShareCollection = client.db('plateShare').collection('foods')
+
+    app.post('/foods',async(req,res)=>{
+        const newFood = req.body;
+        const result = plateShareCollection.insertOne(newFood)
+        res.send(result)
+    })
+    app.get('/foods',async(req,res)=>{
+ 
+      const result =await plateShareCollection.find().toArray()
+      res.send(result)
+
+    })
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
@@ -42,7 +58,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('john is busy shopping')
+    res.send('plateShare is looking at you')
   })
   
   app.listen(port, () => {
