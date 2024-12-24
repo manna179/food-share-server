@@ -42,31 +42,42 @@ async function run() {
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
-      const result =await plateShareCollection.findOne(query);
+      const result = await plateShareCollection.findOne(query);
       console.log(result);
       res.send(result);
     });
     app.put("/foods/:id", async (req, res) => {
-      const body = req.body
+      const body = req.body;
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
-      const result =await plateShareCollection.updateOne(query,{
-        $set:{
-          status:body.status,
-          additionalNotes:body.additionalNotes
+      const result = await plateShareCollection.updateOne(query, {
+        $set: {
+          status: body.status,
+          additionalNotes: body.additionalNotes,
+          quantity:body?.quantity
 
-        }
+        },
       });
-      
+
       console.log(result);
       res.send(result);
     });
 
+
     app.get("/foods", async (req, res) => {
-      const result = await plateShareCollection.find().toArray();
-      res.send(result);
+      const email = req.query.email;
+      console.log(email);
+      if (email) {
+        const result = await plateShareCollection.find({ email }).toArray();
+        res.send(result);
+      } else {
+        const result = await plateShareCollection.find().toArray();
+        res.send(result);
+      }
     });
+
+
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
