@@ -35,6 +35,19 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/foods/:id", async (req, res) => {
+      const id = req.params.id;
+      const info = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          status: info.status,
+        },
+      };
+      const result = await plateShareCollection.updateOne(filter, updatedDoc);
+      res.send(result)
+    });
+
     // app.post('/foods/:id',async(req,res)=>{
 
     // })
@@ -55,18 +68,18 @@ async function run() {
         $set: {
           status: body.status,
           additionalNotes: body.additionalNotes,
-          quantity:body?.quantity
-
+          quantity: body?.quantity,
         },
       });
 
       console.log(result);
       res.send(result);
     });
-
+    
 
     app.get("/foods", async (req, res) => {
       const email = req.query.email;
+      // const expiredDate = req.body.
       console.log(email);
       if (email) {
         const result = await plateShareCollection.find({ email }).toArray();
@@ -76,7 +89,6 @@ async function run() {
         res.send(result);
       }
     });
-
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
