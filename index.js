@@ -45,7 +45,7 @@ async function run() {
         },
       };
       const result = await plateShareCollection.updateOne(filter, updatedDoc);
-      res.send(result)
+      res.send(result);
     });
 
     // app.post('/foods/:id',async(req,res)=>{
@@ -75,17 +75,31 @@ async function run() {
       console.log(result);
       res.send(result);
     });
-    
 
+    app.delete("/foods/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await plateShareCollection.deleteOne(query);
+      res.send(result);
+    });
     app.get("/foods", async (req, res) => {
       const email = req.query.email;
-      // const expiredDate = req.body.
+      const sort = req.query.sort;
+      const sortOrder = sort === "asc" ? 1 : -1; 
+
+
+      let query = {};
+      if (sort) options = { sort: { expiredDate: sort === "asc" ? 1 : -1 } };
+
       console.log(email);
       if (email) {
         const result = await plateShareCollection.find({ email }).toArray();
         res.send(result);
       } else {
-        const result = await plateShareCollection.find().toArray();
+        const result = await plateShareCollection
+          .find(query)
+          .sort({ expiredDate: sortOrder })
+          .toArray();
         res.send(result);
       }
     });
