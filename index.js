@@ -1,18 +1,26 @@
 const express = require("express");
 const cors = require("cors");
+require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://plate-share-e2f87.web.app",
+      "https://plate-share-e2f87.firebaseapp.com",
+    ],
+  })
+);
 app.use(express.json());
 
-// user  = plateShare
 
-// pass = ZZ7RjXyAU4VfxFnb
 
 const uri =
-  "mongodb+srv://plateShare:ZZ7RjXyAU4VfxFnb@cluster0.ffjkv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ffjkv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -84,11 +92,16 @@ async function run() {
     });
     app.get("/foods", async (req, res) => {
       const email = req.query.email;
+      const search = req.query.search || "";
       const sort = req.query.sort;
-      const sortOrder = sort === "asc" ? 1 : -1; 
+      const sortOrder = sort === "asc" ? 1 : -1;
 
-
-      let query = {};
+      let query = {
+        foodName: {
+          $regex: search,
+          $options: "i",
+        },
+      };
       if (sort) options = { sort: { expiredDate: sort === "asc" ? 1 : -1 } };
 
       console.log(email);
