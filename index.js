@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-require('dotenv').config()
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -8,18 +10,33 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
+      "http://localhost:5174",
       "http://localhost:5173",
       "https://plate-share-e2f87.web.app",
-      "https://plate-share-e2f87.firebaseapp.com",
+      "https://plate-share-server-bqf22rb6p-md-hadisur-rahman-s-projects.vercel.app",
     ],
+    credentials:true
   })
 );
 app.use(express.json());
+app.use(cookieParser());
+const verifyToken=(req,res,next)=>{
+  const token = req.cookies.token
 
+  if(!token){
+    return res.status(401).send({message:'unauthorized access'})
+  }
+  // verify token
+  jwt.verify(token,process.env.TOKEN_SECRET,(err,decoded)=>{
+    if(err){
+      return res.status(401).send({message:'unauthorized access'})
+    }
+    next()
+  })
+ 
+}
 
-
-const uri =
-  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ffjkv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ffjkv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,6 +53,27 @@ async function run() {
     // const productCollection = client.db('emaJohnDB').collection('foods');
 
     const plateShareCollection = client.db("plateShare").collection("foods");
+
+    // auth related / token
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.TOKEN_SECRET, {
+        expiresIn: "3h",
+      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+        })
+        .send({ success: true });
+    });
+    app.post('/logout',(req,res)=>{
+      res.clearCookie('token',{
+        httpOnly:true,
+        secure:false
+      }).send({success:true})
+    })
+
 
     app.post("/foods", async (req, res) => {
       const newFood = req.body;
@@ -92,6 +130,7 @@ async function run() {
     });
     app.get("/foods", async (req, res) => {
       const email = req.query.email;
+      // console.log(req.cookies?.token);
       const search = req.query.search || "";
       const sort = req.query.sort;
       const sortOrder = sort === "asc" ? 1 : -1;
